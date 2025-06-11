@@ -25,6 +25,7 @@ from renpy.compat import PY2, basestring, bchr, bord, chr, open, pystr, range, r
 
 
 import pygame_sdl2
+from renpy.test.types import Node, NodeLocation
 
 code_to_unicode = {
     pygame_sdl2.K_UNKNOWN : "",
@@ -271,7 +272,11 @@ for k, v in sorted(code_to_unicode.items()):
         unicode_to_code[v] = k
 
 
-def get_keycode(node, keysym):
+def get_keycode(node: Node, keysym: str) -> tuple[int, str | None, int]:
+    """
+    Returns the keycode, unicode character, and modifier flags for a given keysym.
+    If the keysym is not recognized, an exception is raised.
+    """
 
     c = keysym.split("_")
 
@@ -324,13 +329,16 @@ def get_keycode(node, keysym):
     return code, u, mods
 
 
-def down(node, keysym):
+def down(node: Node, keysym: str) -> None:
+    """
+    Posts a KEYDOWN event for the given keysym, which is a string like "ctrl_K_a".
+    """
     code, u, mods = get_keycode(node, keysym)
 
     if pygame_sdl2.key.text_input:
         pygame_sdl2.event.post(pygame_sdl2.event.Event(
             pygame_sdl2.KEYDOWN,
-            unicode='',
+            unicode="",
             key=code,
             scancode=code,
             mod=mods,
@@ -354,7 +362,10 @@ def down(node, keysym):
             test=True))
 
 
-def up(node, keysym):
+def up(node: Node, keysym: str) -> None:
+    """
+    Posts a KEYUP event for the given keysym, which is a string like "ctrl_K_a".
+    """
     code, _, mods = get_keycode(node, keysym)
 
     pygame_sdl2.event.post(pygame_sdl2.event.Event(
