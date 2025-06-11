@@ -394,6 +394,10 @@ def bootstrap(renpy_base):
 
     finally:
 
+        if renpy.test.testexecution.node is not None:
+            for clbk in renpy.config.end_testcase_callbacks:
+                clbk()
+
         if "RENPY_SHUTDOWN_TRACE" in os.environ:
             enable_trace(int(os.environ["RENPY_SHUTDOWN_TRACE"]))
 
