@@ -44,13 +44,35 @@ def parse_click(l: Lexer, loc: NodeLocation, target: testast.Selector | None) ->
             rv.always = True
 
         else:
-            break
+            selector = parse_selector(l, loc)
+            if selector is not None:
+                rv.selector = selector
+            else:
+                break
 
     return rv
 
 
-def parse_type(l: Lexer, loc: NodeLocation, keys: list[str]) -> testast.Type:
-    rv = testast.Type(loc, keys)
+def parse_type(l: Lexer, loc: NodeLocation, text: str) -> testast.Type:
+    rv = testast.Type(loc, text)
+
+    while True:
+
+        if l.keyword("pos"):
+            rv.position = l.require(l.simple_expression)
+
+        else:
+            selector = parse_selector(l, loc)
+            if selector is not None:
+                rv.selector = selector
+            else:
+                break
+
+    return rv
+
+
+def parse_keysym(l: Lexer, loc: NodeLocation, text: str) -> testast.Keysym:
+    rv = testast.Keysym(loc, text)
 
     while True:
 
@@ -193,13 +215,13 @@ def parse_clause(l: Lexer, loc: NodeLocation) -> testast.Clause:
 
     elif l.keyword("type"):
 
-        name = l.name()
-        if name is not None:
-            return parse_type(l, loc, [ name ])
+        string = l.require(l.string)
+        return parse_type(l, loc, string)
+
+    elif l.keyword("keysym"):
 
         string = l.require(l.string)
-
-        return parse_type(l, loc, list(string))
+        return parse_keysym(l, loc, string)
 
     elif l.keyword("drag"):
 
