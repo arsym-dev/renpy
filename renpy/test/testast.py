@@ -95,7 +95,7 @@ class Node(object):
             The time since start was called.
         """
         next_node(self.next)
-        return state
+        return None
 
     def ready(self) -> bool:
         """
@@ -270,7 +270,12 @@ class SelectorDrivenClause(Clause):
 
         x, y = self.get_position()
 
-        return self.perform(x, y, state, t)
+        rv = self.perform(x, y, state, t)
+        if rv is None:
+            next_node(self.next)
+            return None
+
+        return rv
 
     def get_position(self) -> tuple[int, int]:
         """
@@ -298,7 +303,7 @@ class SelectorDrivenClause(Clause):
 
         return x, y # type: ignore
 
-    def perform(self, x: int, y: int, state: State, t: float) -> State:
+    def perform(self, x: int, y: int, state: State, t: float) -> State | None:
         """
         Perform the action at the given coordinates.
 
@@ -332,16 +337,11 @@ class Click(SelectorDrivenClause):
 
     def perform(self, x, y, state, t):
         click_mouse(self.button, x, y)
-        next_node(self.next)
-        return None
 
 
 class Move(SelectorDrivenClause):
-    __slots__ = ()
     def perform(self, x, y, state, t):
         move_mouse(x, y)
-        next_node(self.next)
-        return None
 
 
 class Scroll(Clause):
@@ -498,12 +498,8 @@ class Keysym(SelectorDrivenClause):
         self.keysym = keysym
 
     def perform(self, x, y, state, t):
-
         move_mouse(x, y)
         renpy.test.testkey.queue_keysym(self, self.keysym)
-
-        next_node(self.next)
-        return None
 
 
 class Action(Clause):
@@ -560,10 +556,6 @@ class Label(Clause):
         super(Label, self).__init__(loc)
         self.name = name
 
-    def execute(self, state, t):
-        next_node(self.next)
-        return None
-
     def ready(self):
         return self.name in renpy.test.testexecution.labels
 
@@ -572,29 +564,17 @@ class Label(Clause):
 
 
 class Eval(Clause):
-    __slots__ = ("expr", "evaluated")
+    __slots__ = ("expr")
     def __init__(self, loc: NodeLocation, expr):
         super(Eval, self).__init__(loc)
         self.expr = expr
-        self.evaluated = False
-
-    def execute(self, state, t):
-        if not self.evaluated: # check if this is necessary
-            self.ready()
-        next_node(self.next)
-        return None
 
     def ready(self):
-        rv = bool(renpy.python.py_eval(self.expr))
-        self.evaluated = True
-        return rv
+        return bool(renpy.python.py_eval(self.expr))
 
 
 class Pass(Clause):
-    __slots__ = ()
-    def execute(self, state, t):
-        next_node(self.next)
-        return None
+    pass
 
 
 ################################################################################
@@ -605,14 +585,6 @@ class Not(Clause):
     def __init__(self, loc: NodeLocation, clause: Clause):
         super(Not, self).__init__(loc)
         self.clause = clause
-
-    def start(self):
-        return self.clause.start()
-
-    def execute(self, state, t):
-        # return self.clause.execute(state, t)
-        next_node(self.next)
-        return None
 
     def ready(self):
         return not self.clause.ready()
@@ -839,14 +811,12 @@ class Assert(Node):
         Node.__init__(self, loc)
         self.clause = clause
 
-    def execute(self, state, t):
-
+    def ready(self):
         if not self.clause.ready():
             raise AssertError("On line {}:{}, assertion of {} failed.".format(self.filename,
                                                                               self.linenumber,
                                                                               self.clause))
-        next_node(self.next)
-        return None
+        return True
 
 
 class Jump(Node):
