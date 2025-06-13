@@ -375,7 +375,7 @@ def parse_statement(l: Lexer, loc: NodeLocation) -> testast.Node:
 
 def parse_selector(l: Lexer, loc: NodeLocation) -> testast.Selector | None:
     """
-    Parses a selector, which is currently either Pattern (string) or Displayable (screen/id).
+    Parses a selector, which is currently either a pattern (string) or displayable (screen/id).
     """
 
     pattern = None
@@ -397,7 +397,7 @@ def parse_selector(l: Lexer, loc: NodeLocation) -> testast.Selector | None:
             temp = l.string()
             if temp is not None:
                 if pattern is not None:
-                    l.error("Only one pattern may be specified in a selector.")
+                    l.error("Only one text pattern may be specified in a selector.")
                 pattern = temp
             else:
                 break
@@ -406,7 +406,7 @@ def parse_selector(l: Lexer, loc: NodeLocation) -> testast.Selector | None:
         return None
 
     if pattern is not None and (screen is not None or id is not None):
-        l.error("A pattern may not be specified with a screen or id.")
+        l.error("A text pattern may not be specified with a screen or id.")
 
     if pattern is not None:
         return testast.TextSelector(loc, pattern)
@@ -414,7 +414,7 @@ def parse_selector(l: Lexer, loc: NodeLocation) -> testast.Selector | None:
     return testast.DisplayableSelector(loc, screen, id, layer)
 
 
-def parse_condition(l: Lexer, loc: NodeLocation, left: testast.Clause | None = None) -> testast.Clause:
+def parse_condition(l: Lexer, loc: NodeLocation, left: testast.Condition | None = None) -> testast.Condition:
     """
     Parses a condition that may start with a selector, or
     have one or more 'and', 'or', 'not', or parenthesized conditions.
