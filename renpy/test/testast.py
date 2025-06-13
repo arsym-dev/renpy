@@ -117,31 +117,26 @@ class Node(object):
         return "<{}{} ({}:{})>".format(type(self).__name__, params, self.filename, self.linenumber)
 
 
-class Clause(Node):
-    __slots__ = ()
+class Condition(Node):
+    """
+    A base class for conditions that can be used in test scripts.
 
-    # def __repr__(self):
-    #     return "<{} test clause at {}:{}>".format(type(self).__name__, self.filename, self.linenumber)
-
+    Conditions should NOT execute any actions or change the state of the game.
+    They should only check if a certain condition is met.
+    """
+    def execute(self, state: State, t: float) -> State:
+        raise TestcaseException("Conditions should not be executed directly. Use `ready()` instead.")
 
 class TestcaseException(ValueError):pass
 
 class SelectorException(TestcaseException):pass
 
 
-class Selector(Clause):
+class Selector(Condition):
     """
     Base class for selectors. Selectors find a focusable or displayable
     item on the screen.
     """
-
-    def execute(self, state, t):
-
-        if renpy.display.interface.trans_pause and (t < _test.transition_timeout):
-            return state
-
-        next_node(self.next)
-        return None
 
     def element_not_found_during_perform(self) -> None:
         """
@@ -181,7 +176,7 @@ class DisplayableSelector(Selector):
         self.layer = layer
 
         if self.screen is None and self.id is None:
-            raise ValueError("A displayable clause must have a screen and/or an id specified.")
+            raise ValueError("Specify screen and/or id.")
 
     def element_not_found_during_perform(self) -> None:
         if self.screen or self.id:
@@ -227,7 +222,7 @@ class TextSelector(Selector):
         return renpy.test.testfocus.find_focus(self.pattern)
 
 
-class SelectorDrivenClause(Clause):
+class SelectorDrivenNode(Node):
     """
     Base class for nodes that perform actions that may take
     a selector as a target.
@@ -255,13 +250,12 @@ class SelectorDrivenClause(Clause):
         position: Position | None = None,
         always: bool = False,
     ):
-        super(SelectorDrivenClause, self).__init__(loc)
+        super(SelectorDrivenNode, self).__init__(loc)
         self.selector = selector
         self.position = position
         self.always = always
 
     def execute(self, state: State, t: float) -> State:
-
         if renpy.display.interface.trans_pause and (t < _test.transition_timeout):
             return state
 
@@ -331,7 +325,7 @@ class SelectorDrivenClause(Clause):
         return True
 
 
-class Click(SelectorDrivenClause):
+class Click(SelectorDrivenNode):
     # The number of the button to click.
     button: int = 1
 
@@ -339,19 +333,18 @@ class Click(SelectorDrivenClause):
         click_mouse(self.button, x, y)
 
 
-class Move(SelectorDrivenClause):
+class Move(SelectorDrivenNode):
     def perform(self, x, y, state, t):
         move_mouse(x, y)
 
 
-class Scroll(Clause):
+class Scroll(Node):
     __slots__ = "pattern"
     def __init__(self, loc: NodeLocation, pattern: str | None = None):
         super(Scroll, self).__init__(loc)
         self.pattern = pattern
 
     def execute(self, state, t):
-
         f = renpy.test.testfocus.find_focus(self.pattern)
 
         if f is None:
@@ -376,12 +369,11 @@ class Scroll(Clause):
         return None
 
     def ready(self):
-
         f = renpy.test.testfocus.find_focus(self.pattern)
         return f is not None
 
 
-class Drag(Clause):
+class Drag(Node):
     __slots__ = ("points", "pattern", "button", "steps")
     def __init__(self, loc: NodeLocation, points: list[tuple[int, int]]):
         super(Drag, self).__init__(loc)
@@ -392,12 +384,10 @@ class Drag(Clause):
         self.steps: int = 10
 
     def execute(self, state, t):
-
         if renpy.display.interface.trans_pause:
             return state
 
         if self.pattern:
-
             f = renpy.test.testfocus.find_focus(self.pattern)
             if f is None:
                 return state
@@ -406,7 +396,6 @@ class Drag(Clause):
             f = None
 
         if state is True:
-
             points = renpy.python.py_eval(self.points)
             points = [ renpy.test.testfocus.find_position(f, i) for i in points ]
 
@@ -437,7 +426,6 @@ class Drag(Clause):
             renpy.test.testmouse.press_mouse(self.button)
 
         else:
-
             interpoints = state
 
             x, y = interpoints.pop(0)
@@ -452,7 +440,6 @@ class Drag(Clause):
             return interpoints
 
     def ready(self):
-
         if self.pattern is None:
             return True
 
@@ -464,7 +451,7 @@ class Drag(Clause):
             return False
 
 
-class Type(SelectorDrivenClause):
+class Type(SelectorDrivenNode):
     __slots__ = "text"
     # interval = .01 # unused
 
@@ -476,7 +463,6 @@ class Type(SelectorDrivenClause):
         return 0
 
     def perform(self, x, y, state, t):
-
         if state >= len(self.text):
             next_node(self.next)
             return None
@@ -490,7 +476,7 @@ class Type(SelectorDrivenClause):
         return state + 1
 
 
-class Keysym(SelectorDrivenClause):
+class Keysym(SelectorDrivenNode):
     __slots__ = "keysym"
 
     def __init__(self, loc: NodeLocation, keysym: str, **kwargs):
@@ -502,7 +488,7 @@ class Keysym(SelectorDrivenClause):
         renpy.test.testkey.queue_keysym(self, self.keysym)
 
 
-class Action(Clause):
+class Action(Node):
     """
     This is for the `run` keyword
     """
@@ -516,7 +502,6 @@ class Action(Clause):
         return True
 
     def execute(self, state, t):
-
         if renpy.test.testexecution.action:
             return state
         else:
@@ -524,12 +509,11 @@ class Action(Clause):
             return None
 
     def ready(self):
-
         action = renpy.python.py_eval(self.expr)
         return renpy.display.behavior.is_sensitive(action)
 
 
-class Pause(Clause):
+class Pause(Node):
     __slots__ = "expr"
     def __init__(self, loc: NodeLocation, expr):
         super(Pause, self).__init__(loc)
@@ -539,7 +523,6 @@ class Pause(Clause):
         return float(renpy.python.py_eval(self.expr))
 
     def execute(self, state, t):
-
         if t < state:
             return state
         else:
@@ -550,7 +533,7 @@ class Pause(Clause):
         return f"{self.expr}"
 
 
-class Label(Clause):
+class Label(Condition):
     __slots__ = "name"
     def __init__(self, loc: NodeLocation, name: str):
         super(Label, self).__init__(loc)
@@ -563,7 +546,7 @@ class Label(Clause):
         return f"{self.name}"
 
 
-class Eval(Clause):
+class Eval(Condition):
     __slots__ = ("expr")
     def __init__(self, loc: NodeLocation, expr):
         super(Eval, self).__init__(loc)
@@ -573,28 +556,28 @@ class Eval(Clause):
         return bool(renpy.python.py_eval(self.expr))
 
 
-class Pass(Clause):
+class Pass(Node):
     pass
 
 
 ################################################################################
 # Boolean proxy clauses
 
-class Not(Clause):
-    __slots__ = "clause"
-    def __init__(self, loc: NodeLocation, clause: Clause):
+class Not(Condition):
+    __slots__ = "condition"
+    def __init__(self, loc: NodeLocation, condition: Condition):
         super(Not, self).__init__(loc)
-        self.clause = clause
+        self.condition = condition
 
     def ready(self):
-        return not self.clause.ready()
+        return not self.condition.ready()
 
-class Binary(Clause):
+class Binary(Condition):
     __slots__ = ("left", "right",
                  "left_ready", "right_ready",
                  "left_state", "right_state")
 
-    def __init__(self, loc: NodeLocation, left: Clause, right: Clause):
+    def __init__(self, loc: NodeLocation, left: Condition, right: Condition):
         super(Binary, self).__init__(loc)
         self.left = left
         self.right = right
@@ -791,7 +774,6 @@ class Python(Node):
         return True
 
     def execute(self, state, t):
-
         if renpy.test.testexecution.action:
             return True
         else:
@@ -805,17 +787,17 @@ class Python(Node):
 class AssertError(AssertionError):pass
 
 
-class Assert(Node):
-    __slots__ = "clause"
-    def __init__(self, loc: NodeLocation, clause: Clause):
+class Assert(Condition):
+    __slots__ = "condition"
+    def __init__(self, loc: NodeLocation, condition: Condition):
         Node.__init__(self, loc)
-        self.clause = clause
+        self.condition = condition
 
     def ready(self):
-        if not self.clause.ready():
+        if not self.condition.ready():
             raise AssertError("On line {}:{}, assertion of {} failed.".format(self.filename,
                                                                               self.linenumber,
-                                                                              self.clause))
+                                                                              self.condition))
         return True
 
 
