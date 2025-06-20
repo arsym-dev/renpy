@@ -1241,7 +1241,19 @@ def screen_statement(l, loc):
 
 @statement("testcase")
 def testcase_statement(l, loc):
-    rv = renpy.test.testparser.testcase_statement(l, loc)
+    test = renpy.test.testparser.testcase_statement(l, loc)
+
+    rv = renpy.ast.Testcase(loc, test)
+
+    return rv
+
+
+@statement("testsuite")
+def testsuite_statement(l, loc):
+    test = renpy.test.testparser.testsuite_statement(l, loc)
+
+    rv = renpy.ast.Testcase(loc, test)
+
     return rv
 
 
