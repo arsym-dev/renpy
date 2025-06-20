@@ -27,6 +27,7 @@ import renpy
 
 from renpy.test.testast import Node, TestcaseException
 from renpy.test.types import State, NodeLocation
+from renpy.test.testsettings import _test
 
 # A map from the name of a testcase to the testcase.
 testcases: dict[str, Node] = { }
@@ -181,8 +182,6 @@ def execute() -> None:
     global old_state
     global old_loc
     global last_state_change
-
-    _test = renpy.test.testast._test
 
     if node is None:
         return
