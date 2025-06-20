@@ -26,7 +26,7 @@ import pygame_sdl2
 import renpy
 
 from renpy.test.testast import Node, TestcaseException
-from renpy.test.types import State, NodeLocation
+from renpy.test.types import State, NodeLocation, RenpyTestTimeoutError
 from renpy.test.testsettings import _test
 
 # A map from the name of a testcase to the testcase.
