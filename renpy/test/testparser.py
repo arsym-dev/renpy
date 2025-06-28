@@ -382,6 +382,7 @@ def testsuite_statement(l: Lexer, loc: NodeLocation) -> testast.TestSuite:
             ll.expect_eol()
             ll.expect_block("before block")
             before = parse_block(ll.subblock_lexer(False), ll.get_location())
+            before.name = "before"
             ll.advance()
 
         elif ll.keyword("before_each"):
@@ -391,6 +392,7 @@ def testsuite_statement(l: Lexer, loc: NodeLocation) -> testast.TestSuite:
             ll.expect_eol()
             ll.expect_block("before_each block")
             before_each = parse_block(ll.subblock_lexer(False), ll.get_location())
+            before_each.name = "before_each"
             ll.advance()
 
         elif ll.keyword("after_each"):
@@ -400,6 +402,7 @@ def testsuite_statement(l: Lexer, loc: NodeLocation) -> testast.TestSuite:
             ll.expect_eol()
             ll.expect_block("after_each block")
             after_each = parse_block(ll.subblock_lexer(False), ll.get_location())
+            after_each.name = "after_each"
             ll.advance()
 
         elif ll.keyword("after"):
@@ -409,6 +412,7 @@ def testsuite_statement(l: Lexer, loc: NodeLocation) -> testast.TestSuite:
             ll.expect_eol()
             ll.expect_block("after block")
             after = parse_block(ll.subblock_lexer(False), ll.get_location())
+            after.name = "after"
             ll.advance()
 
         elif ll.keyword("testcase"):
