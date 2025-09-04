@@ -43,7 +43,7 @@ def get_mouse_pos(x: int, y: int) -> tuple[int, int]:
 
 
 def post(event_type: int, **kwargs) -> None:
-    pygame.event.post(pygame.event.Event(event_type, test=True, **kwargs))
+    pygame.event.post(pygame.event.Event(event_type, test=True, **kwargs)) # type: ignore
 
 
 def move_mouse(x: int, y: int) -> None:
@@ -61,7 +61,7 @@ def move_mouse(x: int, y: int) -> None:
         else:
             rel = (0, 0)
 
-        post(pygame.MOUSEMOTION, pos=pos, rel=rel, buttons=tuple(mouse_buttons))
+        post(pygame.MOUSEMOTION, pos=pos, rel=rel, buttons=tuple(mouse_buttons)) # type: ignore
 
     mouse_pos = pos
 
@@ -71,7 +71,7 @@ def press_mouse(button: int) -> None:
     Presses mouse button `button`.
     """
 
-    post(pygame.MOUSEBUTTONDOWN, pos=mouse_pos, button=button)
+    post(pygame.MOUSEBUTTONDOWN, pos=mouse_pos, button=button) # type: ignore
 
     if button < 3:
         mouse_buttons[button - 1] = 1
@@ -81,7 +81,7 @@ def release_mouse(button: int) -> None:
     """
     Releases mouse button `button`.
     """
-    post(pygame.MOUSEBUTTONUP, pos=mouse_pos, button=button)
+    post(pygame.MOUSEBUTTONUP, pos=mouse_pos, button=button) # type: ignore
 
     if button < 3:
         mouse_buttons[button - 1] = 0
