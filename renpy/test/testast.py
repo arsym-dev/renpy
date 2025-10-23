@@ -1307,7 +1307,8 @@ class Until(Node):
         return old_timeout, child_state, start_time, has_started
 
     def cleanup_after_error(self, state) -> None:
-        _test.timeout = state[0]
+        if state is not None:
+            _test.timeout = state[0]
         self.left.after_until()
 
 
@@ -1392,19 +1393,19 @@ class Assert(Node):
         self.xfail_expr = xfail_expr
         self.is_assertion_true = False  # Whether the assertion was true or not
 
-    def start(self):
+    def start(self) -> float:
         old_timeout = _test.timeout
         timeout = scoped_eval(self.timeout)
         if isinstance(timeout, (int, float)):
             _test.timeout = timeout
         elif timeout is None:
-            _test.timeout = 0
+            _test.timeout = 0.01
         else:
             raise ValueError("Timeout must be a float or None.")
 
         return old_timeout
 
-    def execute(self, state, t):
+    def execute(self, state: float, t: float) -> float | None:
         """
         Executes the assertion. If the condition is not ready, it waits up to
         `self.timeout` seconds.
@@ -1414,13 +1415,14 @@ class Assert(Node):
                 return state
 
         self.is_assertion_true = self.condition.ready()
-        renpy.test.testreporter.reporter.log_assert(self)
         self.cleanup_after_error(state)
+        renpy.test.testreporter.reporter.log_assert(self)
         next_node(self.next)
         return None
 
-    def cleanup_after_error(self, state) -> None:
-        _test.timeout = state
+    def cleanup_after_error(self, state: float | None) -> None:
+        if state is not None:
+            _test.timeout = state
 
     @property
     def xfail(self) -> bool:

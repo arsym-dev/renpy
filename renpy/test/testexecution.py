@@ -83,9 +83,9 @@ def execute() -> None:
 
     try:
         phase_controller.update()
-    except renpy.game.QuitException as e:
+    except renpy.game.QuitException as exc:
         status = quit_handler()
-        raise renpy.game.QuitException(status=status)
+        raise renpy.game.QuitException(status=status) from exc
 
     reached_labels.clear()
 
@@ -439,8 +439,8 @@ class NodeExecutor:
         self.old_loc = None
         self.last_state_change = renpy.display.core.get_time()
 
-    def set_next_node(self, next: Node | None) -> None:
-        self.next_node = next
+    def set_next_node(self, next_node: Node | None) -> None:
+        self.next_node = next_node
 
     def set_end_callback(self, callback: Callable | list[Callable]) -> None:
         if not isinstance(callback, list):
@@ -577,8 +577,7 @@ class TestPhaseController:
         frame_stack = self.get_frame_stack()
         testreporter.reporter.log_exception(exc, frame_stack, xfailed)
 
-        if node_executor.node is not None:
-            node_executor.cleanup_after_error()
+        node_executor.cleanup_after_error()
         node_executor.reinitialize(None)
 
         new_state = self.active_phase.error(status)
@@ -655,7 +654,7 @@ class BaseExecutionPhase:
 class HookPhase(BaseExecutionPhase):
     def error(self, status):
         if not isinstance(self.block, TestHook):
-            raise RuntimeError("Block is not a TestHook.")
+            raise RuntimeError(f"Block is not a TestHook. Got {type(self.block)}.")
 
         testreporter.reporter.test_hook_end(self.block, status, depth=len(suite_stack))
         self.block.increment_call_count()
@@ -822,7 +821,7 @@ class TestCasePhase(BaseExecutionPhase):
 
     def error(self, status) -> BaseExecutionPhase | None:
         if not isinstance(self.block, TestCase):
-            raise RuntimeError("Block is not a TestCase.")
+            raise RuntimeError(f"Block is not a TestCase. Got {type(self.block)}.")
 
         testreporter.reporter.test_case_end(self.block, status, depth=len(suite_stack))
         return self.update()

@@ -2,6 +2,24 @@
     import time
 
 testsuite global:
+    setup:
+        python:
+            # Adjust timeouts based on frame rate
+            # For slower systems, we want to give more time.
+            refresh_rate = renpy.exports.get_refresh_rate()
+            frame_times = renpy.display.interface.frame_times
+
+            if len(frame_times) < 5:
+                fps = refresh_rate
+            else:
+                ift = [ (j - i) for i, j in zip(frame_times, frame_times[1:]) ]
+                fps = 1.0 / (sum(ift[-10:]) / 10.0)
+
+            time_multiplier = max(1, min(refresh_rate / fps, 3))
+            print(f"Adjusting timeouts by factor of {time_multiplier:.2f} (fps: {fps:.2f}, refresh: {refresh_rate})")
+            _test.timeout = 4.0 * time_multiplier
+            _test.transition_timeout = 0.05 * time_multiplier
+
     before testsuite:
         if not screen "main_menu":
             run MainMenu(confirm=False)
@@ -12,10 +30,6 @@ testsuite global:
 
 testsuite default:
     description "Default project testsuite"
-
-    setup:
-        $ _test.timeout = 4.0
-        $ _test.transition_timeout = 0.05
 
     before testcase:
         ## Go to the test screen, even if we've crashed in a prior test
@@ -28,7 +42,7 @@ testsuite default:
                 advance until screen "tutorials"
 
     teardown:
-        click "That's enough for now."
+        click "That's enough for now." until not screen "tutorials"
         advance until screen "main_menu"
         # click "Quit"
 
@@ -47,7 +61,7 @@ testsuite default:
         $ preferences.text_cps = 0
 
         scroll "Bar" until "Player Experience"
-        click "Player Experience"
+        click "Player Experience" until not screen "tutorials"
         advance until screen "choice"
         click "Yes."
 
@@ -83,32 +97,32 @@ testsuite default:
 
     testcase new_game:
         scroll "Bar" until "Creating a New Game"
-        click "Creating a New Game"
+        click "Creating a New Game" until not screen "tutorials"
         advance until screen "tutorials"
 
     testcase dialogue:
         scroll "Bar" until "Writing Dialogue"
-        click "Writing Dialogue"
+        click "Writing Dialogue" until not screen "tutorials"
         advance until screen "tutorials"
 
     testcase images:
         scroll "Bar" until "Adding Images"
-        click "Adding Images"
+        click "Adding Images" until not screen "tutorials"
         advance until screen "tutorials"
 
     testcase transitions:
         scroll "Bar" until "Transitions"
-        click "Transitions"
+        click "Transitions" until not screen "tutorials"
         advance until screen "tutorials"
 
     testcase music:
         scroll "Bar" until "Music and Sound Effects"
-        click "Music and Sound Effects"
+        click "Music and Sound Effects" until not screen "tutorials"
         advance until screen "tutorials"
 
     testcase choices:
         scroll "Bar" until "Choices and Python"
-        click "Choices and Python"
+        click "Choices and Python" until not screen "tutorials"
         advance until screen "choice"
         click "Yes, I do."
         advance until screen "choice"
@@ -117,7 +131,7 @@ testsuite default:
 
     testcase input:
         scroll "Bar" until "Input and Interpolation"
-        click "Input and Interpolation"
+        click "Input and Interpolation" until not screen "tutorials"
         advance until screen "input"
         type "Tom"
         keysym "K_BACKSPACE"
@@ -129,129 +143,130 @@ testsuite default:
 
     testcase positioning_images:
         scroll "Bar" until "Positioning Images"
-        click "Positioning Images"
+        click "Positioning Images" until not screen "tutorials"
         advance until screen "tutorials"
 
     testcase video:
         scroll "Bar" until "Video Playback"
-        click "Video Playback"
+        click "Video Playback" until not screen "tutorials"
         advance until screen "tutorials"
 
 
     testcase nvl_mode:
         scroll "Bar" until "NVL Mode"
-        click "NVL Mode"
+        click "NVL Mode" until not screen "tutorials"
         advance until eval ("nvl_menu" in renpy.game.context().modes) # screen "nvl_choice"
         click "Yes."
         advance until screen "tutorials"
 
     testcase tools:
         scroll "Bar" until "Tools and the Interactive Director"
-        click "Tools and the Interactive Director"
+        click "Tools and the Interactive Director" until not screen "tutorials"
         advance until screen "tutorials"
 
         # Not actually testing the various tools yet.
 
     testcase building:
         scroll "Bar" until "Building Distributions"
-        click "Building Distributions"
+        click "Building Distributions" until not screen "tutorials"
         advance until screen "tutorials"
 
     testcase text_tags:
         scroll "Bar" until "Text Tags, Escapes, and Interpolation"
-        click "Text Tags, Escapes, and Interpolation"
+        click "Text Tags, Escapes, and Interpolation" until not screen "tutorials"
         advance until screen "tutorials"
 
     testcase character_objects:
         scroll "Bar" until "Character Objects"
-        click "Character Objects"
+        click "Character Objects" until not screen "tutorials"
         advance until screen "tutorials"
 
     testcase simple_displayables:
         scroll "Bar" until "Simple Displayables"
-        click "Simple Displayables"
+        click "Simple Displayables" until not screen "tutorials"
         advance until screen "tutorials"
 
     testcase transition_gallery:
         $ _test.transition_timeout = 60.0
 
         scroll "Bar" until "Transition Gallery"
-        click "Transition Gallery"
+        click "Transition Gallery" until not screen "tutorials"
         advance until screen "choice"
-        click "Simple"
+        click "Simple" until not screen "choice"
         advance until screen "choice"
-        click "ImageDissolve"
+        click "ImageDissolve" until not screen "choice"
         advance until screen "choice"
-        click "MoveTransition"
+        click "MoveTransition" until not screen "choice"
         advance until screen "choice"
-        click "CropMove"
+        click "CropMove" until not screen "choice"
         advance until screen "choice"
-        click "PushMove"
+        click "PushMove" until not screen "choice"
         advance until screen "choice"
-        click "AlphaDissolve"
+        click "AlphaDissolve" until not screen "choice"
         advance until screen "choice"
-        click "something else"
+        click "something else" until not screen "choice"
         advance until screen "tutorials"
 
     testcase position_properties:
         scroll "Bar" until "Position Properties"
-        click "Position Properties"
+        click "Position Properties" until not screen "tutorials"
         advance until screen "choice"
         click "xpos .75 ypos .25"
         advance until screen "tutorials"
 
     testcase transforms:
         scroll "Bar" until "Transforms and Animation"
-        click "Transforms and Animation"
+        click "Transforms and Animation" until not screen "tutorials"
         advance until screen "tutorials"
 
+    testcase transform_properties:
         scroll "Bar" until "Transform Properties"
-        click "Transform Properties"
+        click "Transform Properties" until not screen "tutorials"
         advance until screen "tutorials"
 
     testcase gui_customization:
         scroll "Bar" until "GUI Customization"
-        click "GUI Customization"
+        click "GUI Customization" until not screen "tutorials"
         advance until screen "tutorials"
 
     testcase styles:
         scroll "Bar" until "Styles and Style Properties"
-        click "Styles and Style Properties"
+        click "Styles and Style Properties" until not screen "tutorials"
         advance until screen "choice"
-        click "Style basics."
+        click "Style basics." until not screen "choice"
         advance until screen "choice"
-        click "General style properties."
+        click "General style properties." until not screen "choice"
         advance until screen "choice"
-        click "Text style properties."
+        click "Text style properties." until not screen "choice"
         advance until screen "choice"
-        click "Window and Button style properties."
+        click "Window and Button style properties." until not screen "choice"
         advance until screen "choice"
-        click "Bar style properties."
+        click "Bar style properties." until not screen "choice"
         advance until screen "choice"
-        click "Box, Grid, and Fixed style properties."
+        click "Box, Grid, and Fixed style properties." until not screen "choice"
         advance until screen "choice"
-        click "The Displayable Inspector."
+        click "The Displayable Inspector." until not screen "choice"
         advance until screen "choice"
-        click "That's all I want to know."
+        click "That's all I want to know." until not screen "choice"
         advance until screen "tutorials"
 
     testcase screens:
         scroll "Bar" until "Screen Basics"
-        click "Screen Basics"
+        click "Screen Basics" until not screen "tutorials"
         advance until screen "choice"
 
-        click "What screens can do."
+        click "What screens can do." until not screen "choice"
         advance until screen "choice"
-        click "Yes."
+        click "Yes." until not screen "choice"
         advance until screen "choice"
 
-        click "How to show screens."
+        click "How to show screens." until not screen "choice"
         advance until "Since we can't display dialogue at the same time"
         advance until screen "simple_screen"
-        click "Okay"
+        click "Okay" until not screen "choice"
         advance until screen "choice"
 
-        click "Passing parameters to screens."
+        click "Passing parameters to screens." until not screen "choice"
         advance until screen "parameter_screen"
         ## We need to insist on closing the screen. May have to do with transitions
         click "Okay" until not screen "parameter_screen"
@@ -277,31 +292,31 @@ testsuite default:
 
     testcase screen_displayables:
         scroll "Bar" until "Screen Displayables"
-        click "Screen Displayables"
+        click "Screen Displayables" until not screen "tutorials"
         advance until screen "choice"
-        click "Common properties"
+        click "Common properties" until not screen "choice"
         advance until screen "choice"
-        click "Adding images"
+        click "Adding images" until not screen "choice"
         advance until screen "choice"
-        click "Text"
+        click "Text" until not screen "choice"
         advance until screen "choice"
-        click "Buttons"
+        click "Buttons" until not screen "choice"
         advance until screen "choice"
-        click "Bars"
+        click "Bars" until not screen "choice"
         advance until screen "choice"
-        click "Viewports"
+        click "Viewports" until not screen "choice"
         advance until screen "choice"
-        click "Imagemaps"
+        click "Imagemaps" until not screen "choice"
         advance until screen "imagemap_example"
-        click "Science"
+        click "Science" until not screen "choice"
         advance until screen "choice"
-        click "That's all"
+        click "That's all" until not screen "choice"
 
         advance until screen "tutorials"
 
     testcase translations:
         scroll "Bar" until "Translations"
-        click "Translations"
+        click "Translations" until not screen "tutorials"
         advance until screen "tutorials"
 
 
@@ -318,7 +333,7 @@ testsuite default:
 
         click "Auto"
         scroll "Bar" until "Player Experience"
-        click "Player Experience"
+        click "Player Experience" until not screen "tutorials"
         click "Auto"
         click "History"
 
