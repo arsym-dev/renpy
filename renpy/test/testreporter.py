@@ -26,6 +26,7 @@ from enum import Enum
 import io
 import os
 import platform
+import sys
 
 import renpy
 from renpy.error import ANSIColors
@@ -424,8 +425,17 @@ class Reporter(abc.ABC):
     Base class for reporters that handle reporting of test outcomes.
     """
 
+    epc: renpy.error.ExceptionPrintContext
+
     def __init__(self):
-        self.epc: renpy.error.ExceptionPrintContext = renpy.error.MaybeColoredExceptionPrintContext()
+        if renpy.emscripten:
+            file = sys.stdout
+            if file is None:
+                file = io.StringIO()
+
+            self.epc = renpy.error.NonColoredExceptionPrintContext(file)
+        else:
+            self.epc = renpy.error.MaybeColoredExceptionPrintContext()
 
     def test_run_start(self, outcomes: OutcomeManager) -> None:
         """Called when the entire test run starts."""

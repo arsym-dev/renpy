@@ -1583,6 +1583,9 @@ class Screenshot(Node):
 
 class Exit(Node):
     def execute(self, state, t):
+        if renpy.emscripten:
+            return
+
         raise renpy.game.QuitException
 
 
