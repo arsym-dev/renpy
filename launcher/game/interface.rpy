@@ -240,12 +240,12 @@ screen common:
         label title text_color title_color style "l_info_label"
 
     if back:
-        textbutton _("Return") action back style "l_left_button"
+        textbutton _("Return") id "return_btn" action back style "l_left_button"
     elif cancel:
-        textbutton _("Cancel") action cancel style "l_left_button"
+        textbutton _("Cancel") id "cancel_btn" action cancel style "l_left_button"
 
     if continue_:
-        textbutton _("Continue") action continue_ style "l_right_button"
+        textbutton _("Continue") id "continue_btn" action continue_ style "l_right_button"
         key "input_enter" action continue_
 
 
@@ -268,7 +268,7 @@ screen launcher_input:
 
             add SPACER
 
-            input style "l_default":
+            input style "l_default" id "input":
                 value ScreenVariableInputValue("value", returnable=True)
                 size 24
                 xalign 0.5
@@ -285,7 +285,7 @@ screen launcher_input:
     if cancel:
         textbutton _("Cancel") action cancel style "l_left_button"
 
-    textbutton _("Continue") action Return(value) style "l_right_button"
+    textbutton _("Continue") id "continue_btn" action Return(value) style "l_right_button"
 
 
 init python in interface:

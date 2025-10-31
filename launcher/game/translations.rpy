@@ -397,8 +397,8 @@ screen extract_dialogue:
                         allow interface.TRANSLATE_LETTERS
 
 
-    textbutton _("Cancel") action Jump("front_page") style "l_left_button"
-    textbutton _("Continue") action Jump("start_extract_dialogue") style "l_right_button"
+    textbutton _("Cancel") id "cancel_btn" action Jump("front_page") style "l_left_button"
+    textbutton _("Continue") id "continue_btn" action Jump("start_extract_dialogue") style "l_right_button"
 
 label extract_dialogue:
 

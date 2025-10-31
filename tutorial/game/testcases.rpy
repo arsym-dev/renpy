@@ -249,7 +249,7 @@ testsuite default:
         click "How to show screens." until not screen "choice"
         advance until "Since we can't display dialogue at the same time"
         advance until screen "simple_screen"
-        click "Okay" until not screen "choice"
+        click "Okay" until not screen "simple_screen"
         advance until screen "choice"
 
         click "Passing parameters to screens." until not screen "choice"
@@ -258,22 +258,22 @@ testsuite default:
         click "Okay" until not screen "parameter_screen"
         advance until "The call screen statement can also take arguments"
         advance until screen "parameter_screen"
-        click "Okay"
+        click "Okay" until not screen "parameter_screen"
         advance until screen "choice"
 
-        click "Screen properties."
+        click "Screen properties." until not screen "choice"
         advance until screen "modal_example"
         ## We need to insist on closing the screen. May have to do with transitions
         click "Close This Screen" until not screen "modal_example"
         advance until screen "choice"
 
-        click "Special screen statements."
+        click "Special screen statements." until not screen "choice"
         advance until screen "choice"
 
-        click "Using other screens."
+        click "Using other screens." until not screen "choice"
         advance until screen "choice"
 
-        click "That's it."
+        click "That's it." until not screen "choice"
 
 
     testcase screen_displayables:
@@ -294,7 +294,7 @@ testsuite default:
         advance until screen "choice"
         click "Imagemaps" until not screen "choice"
         advance until screen "imagemap_example"
-        click "Science" until not screen "choice"
+        click "Science" until not screen "imagemap_example"
         advance until screen "choice"
         click "That's all" until not screen "choice"
 
