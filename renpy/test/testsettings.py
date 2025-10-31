@@ -21,7 +21,7 @@
 
 from dataclasses import dataclass
 import subprocess
-
+import renpy
 
 @dataclass
 class TestReportSettings:
@@ -70,6 +70,12 @@ class TestSettings:
     timeout: float = 5.0
     """The number of seconds to wait for a test to complete before failing it."""
 
+    timeout_multiplier: float | None = None
+    """
+    A multiplier applied to timeouts to account for slow systems.
+    If None, it is computed automatically at the start of the test run.
+    """
+
     transition_timeout: float = 5.0
     """The number of seconds to wait for a transition to complete before skipping it."""
 
@@ -83,6 +89,46 @@ class TestSettings:
                 ).strip()
             except (subprocess.CalledProcessError, FileNotFoundError):
                 pass
+
+    @property
+    def adjusted_timeout(self) -> float:
+        """
+        The number of seconds to wait for a test to complete before failing it.
+        Includes timeout multiplier.
+        """
+
+        if self.timeout_multiplier is None:
+            return self.timeout
+        return self.timeout * self.timeout_multiplier
+
+    def compute_timeout_multiplier(self) -> None:
+        """
+        Compute the timeout multiplier based on the system's performance.
+        Give more time to slower systems.
+
+        Bypassed if timeout_multiplier is already set.
+        """
+        if self.timeout_multiplier is not None:
+            return
+
+        refresh_rate = renpy.exports.get_refresh_rate()
+        frame_times = renpy.display.interface.frame_times
+
+        if len(frame_times) < 5:
+            fps = refresh_rate
+        else:
+            ift = [ (j - i) for i, j in zip(frame_times, frame_times[1:]) ]
+            frame_interval = sum(ift[-10:])/10.0
+            if frame_interval == 0:
+                fps = refresh_rate
+            else:
+                fps = 1.0 / frame_interval
+
+        self.timeout_multiplier = max(1, min(refresh_rate / fps, 3))
+        if self.timeout_multiplier > 1.0:
+            renpy.test.testreporter.reporter.log_message(
+                f"Adjusting timeouts by factor of {self.timeout_multiplier:.2f}"
+                f" (fps: {fps:.2f}, refresh rate: {refresh_rate})")
 
 
 _test = TestSettings()

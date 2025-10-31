@@ -580,16 +580,24 @@ The following variables can be set to change the behavior of tests:
     This can be overridden on a per-statement basis by providing a ``timeout``
     property to statements that support it (like ``assert`` and ``until``).
 
-.. var:: _test.force
+.. var:: _test.timeout_multiplier
 
-    A boolean specifying whether to force the test to proceed even if
-    ``renpy.config.suppress_underlay`` is ``True``. Defaults to ``False``.
+    A float specifying a multiplier applied to timeouts to account for
+    slow systems.
+
+    If ``None``, it is computed automatically at the start of the
+    test run based on frame rate. Defaults to ``None``.
 
 .. var:: _test.transition_timeout
 
     A float specifying the maximum number of seconds to wait for a transition
     to complete before skipping it and proceeding with the test.
     Defaults to ``5.0``.
+
+.. var:: _test.force
+
+    A boolean specifying whether to force the test to proceed even if
+    ``renpy.config.suppress_underlay`` is ``True``. Defaults to ``False``.
 
 .. var:: _test.focus_trials
 

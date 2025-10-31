@@ -3,22 +3,8 @@
 
 testsuite global:
     setup:
-        python:
-            # Adjust timeouts based on frame rate
-            # For slower systems, we want to give more time.
-            refresh_rate = renpy.exports.get_refresh_rate()
-            frame_times = renpy.display.interface.frame_times
-
-            if len(frame_times) < 5:
-                fps = refresh_rate
-            else:
-                ift = [ (j - i) for i, j in zip(frame_times, frame_times[1:]) ]
-                fps = 1.0 / (sum(ift[-10:]) / 10.0)
-
-            time_multiplier = max(1, min(refresh_rate / fps, 3))
-            print(f"Adjusting timeouts by factor of {time_multiplier:.2f} (fps: {fps:.2f}, refresh: {refresh_rate})")
-            _test.timeout = 4.0 * time_multiplier
-            _test.transition_timeout = 0.05 * time_multiplier
+        $ _test.timeout = 4.0
+        $ _test.transition_timeout = 0.05
 
     before testsuite:
         if not screen "main_menu":

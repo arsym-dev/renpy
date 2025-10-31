@@ -27,7 +27,7 @@ import renpy
 import renpy.pygame as pygame
 
 from renpy.error import FrameSummary
-from renpy.test.testast import Node, BaseTestBlock, TestSuite, TestCase, TestHook, Exit
+from renpy.test.testast import Node, BaseTestBlock, TestSuite, TestCase, TestHook, Pause, Exit
 from renpy.test.types import NodeState, NodeLocation, RenpyTestTimeoutError, HookType
 import renpy.test.testreporter as testreporter
 from renpy.test.testsettings import _test
@@ -504,8 +504,8 @@ class NodeExecutor:
     def check_for_timeout(self, now) -> None:
         self.update_last_state_change(now)
 
-        if (now - self.last_state_change) > _test.timeout:
-            raise RenpyTestTimeoutError(f"TestCase timed out after {_test.timeout} seconds.")
+        if (now - self.last_state_change) > _test.adjusted_timeout:
+            raise RenpyTestTimeoutError(f"TestCase timed out after {_test.adjusted_timeout} seconds.")
 
     def cleanup_after_error(self) -> None:
         if self.node is not None:
@@ -534,11 +534,13 @@ class TestPhaseController:
     running hooks, running testcases, and handling exceptions.
     """
 
+    active_phase: "BaseExecutionPhase"
+    next_phase: "BaseExecutionPhase | None" = None
+
     def __init__(self, root_suite: TestSuite):
-        self.active_phase: BaseExecutionPhase = StartPhase(root_suite)
-        testreporter.reporter.test_run_start()
+        self.active_phase = StartPhase(root_suite)
         self.active_phase.enter()
-        self.next_phase: BaseExecutionPhase | None = None
+        self.next_phase = None
 
     @property
     def is_running(self) -> bool:
@@ -718,9 +720,14 @@ class StartPhase(BaseExecutionPhase):
         self.root_suite = root_suite
 
     def enter(self) -> None:
-        push_suite_stack(self.root_suite)
+        # Start with a brief pause to allow the game to get some frame data for timeout adjustment.
+        node_executor.set_next_node(Pause(("StartPhase", 0), "0.1"))
 
     def update(self) -> BaseExecutionPhase | None:
+        _test.compute_timeout_multiplier()
+
+        testreporter.reporter.test_run_start()
+        push_suite_stack(self.root_suite)
         return SuiteSetupPhase()
 
 

@@ -1,7 +1,7 @@
 testsuite global:
-    before testcase:
-        $ _test.transition_timeout = 0.05
+    setup:
         $ _test.timeout = 2.0
+        $ _test.transition_timeout = 0.05
 
         if not screen "main_menu":
             run MainMenu(confirm=False)

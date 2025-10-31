@@ -1281,8 +1281,8 @@ class Until(Node):
     def execute(self, state: tuple[float | None, Any, float, bool], t):
         old_timeout, child_state, start_time, has_started = state
 
-        if t > _test.timeout:
-            msg = f"Until Statement timed out after {_test.timeout} seconds."
+        if t > _test.adjusted_timeout:
+            msg = f"Until Statement timed out after {_test.adjusted_timeout} seconds."
             raise RenpyTestTimeoutError(msg)
 
         if self.right.ready():
@@ -1411,7 +1411,7 @@ class Assert(Node):
         `self.timeout` seconds.
         """
         if (not self.condition.ready()) ^ self.xfail:
-            if t < _test.timeout:
+            if t < _test.adjusted_timeout:
                 return state
 
         self.is_assertion_true = self.condition.ready()
