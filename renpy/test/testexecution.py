@@ -554,6 +554,9 @@ class TestPhaseController:
                 next_phase = self.active_phase.update()
                 self.transition_to_new_phase(next_phase)
 
+                if isinstance(self.active_phase, EndPhase):
+                    break
+
         except renpy.game.CONTROL_EXCEPTIONS:
             raise
 
